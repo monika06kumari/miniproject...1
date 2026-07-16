@@ -1,0 +1,3 @@
+@echo off
+echo Starting Nexus AI backend...
+py backend/main.py

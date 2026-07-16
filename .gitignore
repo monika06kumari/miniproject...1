@@ -1,0 +1,15 @@
+# Environment Variables
+.env
+backend/.env
+
+# Mac system files
+.DS_Store
+
+# Python Cache
+__pycache__/
+*.pyc
+
+# Local database files
+*.db
+backend/nexus.db
+backend/db_team.json

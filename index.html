@@ -1,0 +1,1075 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nexus | AI Project Manager</title>
+    <meta name="description" content="Nexus — The AI-powered COO for your team. Monitor projects, agents, risks, and workload in one intelligent dashboard.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css?v=14">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        /* Member-role view restrictions */
+        .role-member .project-team { display: none !important; }
+        .role-member #nav-team { display: none !important; }
+        .role-member #nav-agents { display: none !important; }
+        .role-member #nav-vault { display: none !important; }
+        .role-member .remove-member-btn { display: none !important; }
+        .role-member #btn-new-project { display: none !important; }
+        .role-member #btn-add-member { display: none !important; }
+        .role-member #vault-header-btn { display: none !important; }
+        .role-member #edit-project-btn { display: none !important; }
+        .role-member #delete-project-btn { display: none !important; }
+        .role-member #nav-member-dash { display: flex !important; }
+        /* Admin-only: hide member dashboard nav link */
+        .role-admin #nav-member-dash { display: none !important; }
+        #nav-member-dash { display: none; }
+        /* Members cannot add tasks in Kanban */
+        .role-member #btn-quick-task { display: none !important; }
+        .role-member #quick-add-form { display: none !important; }
+    </style>
+</head>
+<body>
+
+<!-- ─── LANDING SCREEN ─── -->
+<div id="landing-screen" class="landing-screen">
+    <canvas id="landing-canvas" class="landing-canvas"></canvas>
+    <div class="lp-orb lp-orb-1"></div>
+    <div class="lp-orb lp-orb-2"></div>
+    <div class="lp-orb lp-orb-3"></div>
+    <div class="lp-float-icon fi-1"><i class="ri-robot-2-line"></i></div>
+    <div class="lp-float-icon fi-2"><i class="ri-bar-chart-2-line"></i></div>
+    <div class="lp-float-icon fi-3"><i class="ri-shield-check-line"></i></div>
+    <div class="lp-float-icon fi-4"><i class="ri-cpu-line"></i></div>
+    <nav class="lp-nav">
+        <div class="lp-logo">
+            <div class="lp-logo-icon"><i class="ri-pulse-fill"></i></div>
+            <span class="lp-logo-text">NEXUS</span>
+            <span class="lp-logo-badge">AI</span>
+        </div>
+        <button id="nav-btn-login" class="lp-btn-ghost"><i class="ri-login-box-line"></i> Log In</button>
+    </nav>
+    <div class="lp-body">
+        <div class="lp-left">
+            <div class="lp-tag"><i class="ri-sparkling-2-fill"></i> Powered by Gemini</div>
+            <h1 class="lp-headline">
+                The AI that<br>runs your <span class="lp-typewriter-wrap"><span id="lp-typewriter" class="lp-grad-text"></span><span class="lp-cursor">|</span></span>
+            </h1>
+            <p class="lp-sub">Nexus orchestrates projects, agents, risks, and meetings so your team can focus on what matters most.</p>
+            <div class="lp-cta-row">
+                <button id="hero-btn-start" class="lp-btn-primary">
+                    <span>Get Started</span><i class="ri-arrow-right-line"></i>
+                    <div class="lp-btn-shine"></div>
+                </button>
+            </div>
+            <div class="lp-pills">
+                <span class="lp-pill"><i class="ri-check-line"></i> No credit card</span>
+                <span class="lp-pill"><i class="ri-check-line"></i> 5 AI Agents</span>
+                <span class="lp-pill"><i class="ri-check-line"></i> Real-time insights</span>
+            </div>
+            <div class="lp-stats">
+                <div class="lp-stat"><span class="lp-stat-n" data-target="98">0</span><span class="lp-stat-u">%</span><span class="lp-stat-l">Uptime</span></div>
+                <div class="lp-stat-sep"></div>
+                <div class="lp-stat"><span class="lp-stat-n" data-target="3">0</span><span class="lp-stat-u">×</span><span class="lp-stat-l">Faster</span></div>
+                <div class="lp-stat-sep"></div>
+                <div class="lp-stat"><span class="lp-stat-n" data-target="12">0</span><span class="lp-stat-u">+</span><span class="lp-stat-l">Integrations</span></div>
+                <div class="lp-stat-sep"></div>
+                <div class="lp-stat"><span class="lp-stat-n" data-target="500">0</span><span class="lp-stat-u">+</span><span class="lp-stat-l">Tasks Auto</span></div>
+            </div>
+        </div>
+        <div class="lp-right">
+            <div class="lp-feat-card">
+                <div class="lp-feat-icon" style="--fc:99,102,241"><i class="ri-robot-2-line"></i></div>
+                <div class="lp-feat-body"><div class="lp-feat-title">Agent Swarms</div><div class="lp-feat-desc">Autonomous AI doing the heavy lifting</div></div>
+                <div class="lp-live-badge">Live</div>
+            </div>
+            <div class="lp-feat-card">
+                <div class="lp-feat-icon" style="--fc:16,185,129"><i class="ri-radar-line"></i></div>
+                <div class="lp-feat-body"><div class="lp-feat-title">Risk Detection</div><div class="lp-feat-desc">Catch delays before they happen</div></div>
+                <div class="lp-live-badge" style="background:rgba(16,185,129,0.15);color:#10b981">Active</div>
+            </div>
+            <div class="lp-feat-card">
+                <div class="lp-feat-icon" style="--fc:245,158,11"><i class="ri-mic-line"></i></div>
+                <div class="lp-feat-body"><div class="lp-feat-title">Auto Transcription</div><div class="lp-feat-desc">Meetings → action items instantly</div></div>
+                <div class="lp-live-badge" style="background:rgba(245,158,11,0.15);color:#f59e0b">Ready</div>
+            </div>
+            <div class="lp-feat-card">
+                <div class="lp-feat-icon" style="--fc:236,72,153"><i class="ri-layout-column-line"></i></div>
+                <div class="lp-feat-body"><div class="lp-feat-title">Kanban + Sprints</div><div class="lp-feat-desc">Visual project intelligence</div></div>
+                <div class="lp-live-badge" style="background:rgba(236,72,153,0.15);color:#ec4899">Smart</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ─── GET STARTED MODAL ─── -->
+    <div id="lp-steps-overlay" class="lp-steps-overlay">
+        <div class="lp-steps-card">
+            <!-- Animated gradient border ring -->
+            <div class="lp-steps-ring"></div>
+
+            <button id="btn-close-steps" class="lp-btn-close-steps"><i class="ri-close-line"></i></button>
+
+            <div class="lp-steps-header">
+                <div class="lp-steps-badge"><i class="ri-sparkling-2-fill"></i> Quick Start Guide</div>
+                <h2 class="lp-steps-title">How Nexus Works</h2>
+                <p class="lp-steps-subtitle">4 simple steps to get your team AI-powered</p>
+            </div>
+
+            <div class="lp-steps-list">
+                <div class="lp-timeline-line"></div>
+
+                <div class="lp-step-item" style="--step-color: 99,102,241">
+                    <div class="lp-step-num" style="--step-color: 99,102,241">
+                        <i class="ri-user-3-line"></i>
+                        <div class="lp-step-pulse"></div>
+                    </div>
+                    <div class="lp-step-content">
+                        <h4>Sign In to Your Workspace</h4>
+                        <p>Use your admin or member credentials to access the full Nexus dashboard.</p>
+                    </div>
+                    <div class="lp-step-badge" style="color:rgba(99,102,241,0.9)">Step 1</div>
+                </div>
+
+                <div class="lp-step-item" style="--step-color: 16,185,129">
+                    <div class="lp-step-num" style="--step-color: 16,185,129">
+                        <i class="ri-plug-2-line"></i>
+                        <div class="lp-step-pulse"></div>
+                    </div>
+                    <div class="lp-step-content">
+                        <h4>Connect Your Tools</h4>
+                        <p>Link GitHub, Zoom, and Google Meet for full workflow intelligence.</p>
+                    </div>
+                    <div class="lp-step-badge" style="color:rgba(16,185,129,0.9)">Step 2</div>
+                </div>
+
+                <div class="lp-step-item" style="--step-color: 245,158,11">
+                    <div class="lp-step-num" style="--step-color: 245,158,11">
+                        <i class="ri-robot-2-line"></i>
+                        <div class="lp-step-pulse"></div>
+                    </div>
+                    <div class="lp-step-content">
+                        <h4>Launch AI Agents</h4>
+                        <p>Deploy autonomous agents to transcribe meetings and detect project risks.</p>
+                    </div>
+                    <div class="lp-step-badge" style="color:rgba(245,158,11,0.9)">Step 3</div>
+                </div>
+
+                <div class="lp-step-item" style="--step-color: 236,72,153">
+                    <div class="lp-step-num" style="--step-color: 236,72,153">
+                        <i class="ri-kanban-view"></i>
+                        <div class="lp-step-pulse"></div>
+                    </div>
+                    <div class="lp-step-content">
+                        <h4>Manage Sprints & Projects</h4>
+                        <p>Track velocity, manage tasks on Kanban, and get AI-powered insights.</p>
+                    </div>
+                    <div class="lp-step-badge" style="color:rgba(236,72,153,0.9)">Step 4</div>
+                </div>
+            </div>
+
+            <div class="lp-steps-footer">
+                <button id="btn-proceed-login" class="lp-steps-cta">
+                    <i class="ri-rocket-2-line"></i>
+                    <span>Let's Get Started</span>
+                    <div class="lp-cta-shine"></div>
+                </button>
+                <p class="lp-steps-note"><i class="ri-shield-check-line"></i> Secure · Private · Powered by Gemini AI</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ─── LOGIN SCREEN ─── -->
+<div id="login-screen" class="login-screen">
+    <div class="login-bg-orbs">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+    </div>
+
+    <!-- Back to landing -->
+    <button id="btn-back-to-landing" class="login-back-btn">
+        <i class="ri-arrow-left-s-line"></i> Back
+    </button>
+
+    <div class="login-card">
+        <div class="login-logo">
+            <div class="login-logo-icon"><i class="ri-pulse-fill"></i></div>
+            <div>
+                <span class="login-logo-text">NEXUS</span>
+                <span class="login-logo-sub">AI Operations Platform</span>
+            </div>
+        </div>
+        <h1 class="login-title">Welcome back</h1>
+        <p class="login-subtitle">Sign in to manage your projects intelligently.</p>
+
+        <!-- Email/Password Form -->
+        <div class="login-form" id="login-form">
+            <div class="login-input-group hidden" id="signup-name-group">
+                <label><i class="ri-user-line"></i> Name</label>
+                <input type="text" id="login-name" class="settings-input" placeholder="Your full name" autocomplete="name">
+            </div>
+            <div class="login-input-group">
+                <label><i class="ri-mail-line"></i> Email</label>
+                <input type="email" id="login-email" class="settings-input" placeholder="you@company.com" autocomplete="email">
+            </div>
+            <div class="login-input-group">
+                <label><i class="ri-lock-password-line"></i> Password</label>
+                <div style="position:relative">
+                    <input type="password" id="login-password" class="settings-input" placeholder="Enter your password" autocomplete="current-password">
+                    <button class="login-eye-btn" id="login-eye-btn" type="button" tabindex="-1"><i class="ri-eye-off-line" id="login-eye-icon"></i></button>
+                </div>
+            </div>
+            <div id="login-error" class="login-error hidden"><i class="ri-error-warning-line"></i> <span id="login-error-text"></span></div>
+            <button class="login-submit" id="btn-email-login"><i class="ri-login-box-line"></i> Sign In</button>
+            <div style="text-align:center; margin-top:1rem; font-size:0.85rem;">
+                <a href="#" id="toggle-signup" style="color:#94a3b8; text-decoration:none;">Don't have an account? <span style="color:#8b5cf6;font-weight:600">Sign up</span></a>
+            </div>
+        </div>
+
+        <p class="login-footer">Protected by Nexus Security · <a href="privacy.html" target="_blank">Privacy Policy</a></p>
+    </div>
+</div>
+
+<div class="app-container" id="app-container" style="display:none;">
+
+    <!-- ─── SIDEBAR ─── -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">
+                <div class="logo-icon"><i class="ri-pulse-fill"></i></div>
+                <div>
+                    <span class="logo-text">NEXUS</span>
+                    <span class="logo-sub">AI Operations</span>
+                </div>
+            </div>
+        </div>
+        <nav class="sidebar-nav">
+            <span class="nav-section-label">OVERVIEW</span>
+            <a href="#" class="nav-item active" data-view="dashboard" id="nav-dashboard"><i class="ri-dashboard-3-line"></i> Dashboard</a>
+            <a href="#" class="nav-item" data-view="projects" id="nav-projects"><i class="ri-folder-chart-line"></i> Projects</a>
+            <span class="nav-section-label">INTELLIGENCE</span>
+            <a href="#" class="nav-item" data-view="agents" id="nav-agents"><i class="ri-robot-2-line"></i> Agent Swarm</a>
+            <a href="#" class="nav-item" data-view="team" id="nav-team"><i class="ri-team-line"></i> Team Workload</a>
+            <a href="#" class="nav-item" data-view="kanban" id="nav-kanban"><i class="ri-layout-column-line"></i> Kanban Board</a>
+            <a href="#" class="nav-item" data-view="member-dash" id="nav-member-dash" style="display:none;"><i class="ri-user-star-line"></i> My Dashboard</a>
+            <span class="nav-section-label">SYSTEM</span>
+            <a href="#" class="nav-item" data-view="settings" id="nav-settings"><i class="ri-settings-4-line"></i> Settings</a>
+        </nav>
+        <div class="sidebar-footer">
+            <div class="ai-status">
+                <div class="ai-status-dot" id="ai-status-dot"></div>
+                <span id="ai-status-text">Connecting...</span>
+            </div>
+        </div>
+    </aside>
+
+    <!-- ─── MAIN CONTENT ─── -->
+    <main class="main-content">
+        <header class="top-header">
+            <div style="display:flex; align-items:center; gap:10px;">
+                <button class="icon-btn" id="sidebar-toggle" title="Toggle Sidebar"><i class="ri-menu-line"></i></button>
+                <div class="search-bar">
+                    <i class="ri-search-line"></i>
+                <input type="text" id="global-search" placeholder="Ask Nexus or search projects..." autocomplete="off">
+                </div>
+            </div>
+            <div class="user-profile">
+                <button class="icon-btn" id="refresh-btn" title="Refresh data (R)"><i class="ri-refresh-line"></i></button>
+                <button class="icon-btn" id="vault-header-btn" title="Vault — Deleted Projects &amp; Members" onclick="switchView('vault')" style="color:#a78bfa"><i class="ri-archive-line"></i></button>
+                <div class="notification-bell" id="notif-bell" title="Notifications">
+                    <i class="ri-notification-3-line"></i>
+                    <span class="notif-count-badge" id="notif-badge">3</span>
+                    <span class="notif-unread-dot" id="notif-dot"></span>
+                </div>
+                <button class="icon-btn" id="logout-header-btn" title="Sign Out" style="color:var(--status-red)"><i class="ri-logout-box-r-line"></i></button>
+                <div class="avatar" id="admin-avatar" title="Click to view profile" style="background:#6366f1;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.85rem;width:36px;height:36px;border-radius:50%;cursor:pointer;user-select:none;flex-shrink:0;">AD</div>
+            </div>
+        </header>
+
+        <!-- DASHBOARD VIEW -->
+        <div class="view active" id="view-dashboard">
+            <div class="dashboard-content">
+                <div class="page-header">
+                    <div>
+                        <h1 class="page-title">Good evening, Admin.</h1>
+                        <p class="subtitle">Nexus is monitoring <strong>4 projects</strong> and <strong>4 agents</strong> are active.</p>
+                    </div>
+                    <button class="btn-primary" id="btn-new-report"><i class="ri-file-chart-line"></i> Generate Report</button>
+                </div>
+                <section class="kpi-grid" id="kpi-grid">
+                    <div class="kpi-card glass-panel skeleton-loader"> </div>
+                    <div class="kpi-card glass-panel skeleton-loader"> </div>
+                    <div class="kpi-card glass-panel skeleton-loader"> </div>
+                    <div class="kpi-card glass-panel skeleton-loader"> </div>
+                </section>
+                <div class="bento-grid">
+                    <section class="bento-panel glass-panel">
+                        <div class="panel-header">
+                            <h2 class="panel-title"><i class="ri-cpu-line text-accent"></i> Agent Swarm</h2>
+                            <a href="#" class="panel-link" data-view="agents">View all →</a>
+                        </div>
+                        <div class="agent-list" id="agent-list"><div class="loading-state"><i class="ri-loader-4-line ri-spin"></i></div></div>
+                    </section>
+                    <section class="bento-panel glass-panel">
+                        <div class="panel-header">
+                            <h2 class="panel-title"><i class="ri-shield-flash-line text-red"></i> Risk Alerts</h2>
+                            <span class="risk-count-badge" id="risk-count">0 risks</span>
+                        </div>
+                        <div class="risk-list" id="risk-list"><div class="loading-state"><i class="ri-loader-4-line ri-spin"></i></div></div>
+                    </section>
+                </div>
+
+                <!-- Charts Row -->
+                <div class="charts-row">
+                    <div class="chart-panel glass-panel">
+                        <div class="panel-header">
+                            <h2 class="panel-title"><i class="ri-bar-chart-2-line text-accent"></i> Task Velocity</h2>
+                            <span class="text-secondary" style="font-size:0.8rem">This Week</span>
+                        </div>
+                        <div class="chart-container"><canvas id="activity-chart"></canvas></div>
+                    </div>
+                    <div class="chart-panel glass-panel chart-panel-sm">
+                        <div class="panel-header">
+                            <h2 class="panel-title"><i class="ri-pie-chart-2-line text-accent"></i> Portfolio</h2>
+                        </div>
+                        <div class="chart-container donut-wrap"><canvas id="portfolio-chart"></canvas></div>
+                        <div class="donut-legend" id="donut-legend"></div>
+                    </div>
+                </div>
+
+                <!-- Sprint Burndown -->
+                <div class="burndown-panel glass-panel" style="margin-top:1.5rem;">
+                    <div class="panel-header">
+                        <h2 class="panel-title"><i class="ri-line-chart-line text-accent"></i> Sprint 4 Burndown</h2>
+                        <div id="sprint-prediction-badge"></div>
+                    </div>
+                    <div class="sprint-meta" id="sprint-meta"></div>
+                    <div class="chart-container" style="height:180px"><canvas id="burndown-chart"></canvas></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- MEMBER DASHBOARD VIEW -->
+        <div class="view" id="view-member-dash">
+            <div class="dashboard-content">
+                <div class="page-header">
+                    <div>
+                        <h1 class="page-title" id="member-dash-greeting">Good morning!</h1>
+                        <p class="subtitle">Here's your personal workspace — track your tasks and update your progress.</p>
+                    </div>
+                    <button class="btn-primary" id="member-report-btn"><i class="ri-file-chart-line"></i> Generate My Report</button>
+                </div>
+                <!-- Member KPI Row -->
+                <section class="kpi-grid" id="member-kpi-grid" style="grid-template-columns:repeat(3,1fr);">
+                    <div class="kpi-card glass-panel">
+                        <div class="kpi-label"><i class="ri-task-line"></i> My Active Tasks</div>
+                        <div class="kpi-value" id="member-kpi-tasks">—</div>
+                    </div>
+                    <div class="kpi-card glass-panel">
+                        <div class="kpi-label"><i class="ri-folder-open-line"></i> My Projects</div>
+                        <div class="kpi-value" id="member-kpi-projects">—</div>
+                    </div>
+                    <div class="kpi-card glass-panel">
+                        <div class="kpi-label"><i class="ri-checkbox-circle-line"></i> Completed Tasks</div>
+                        <div class="kpi-value" id="member-kpi-done">—</div>
+                    </div>
+                </section>
+                <!-- My Projects -->
+                <div class="bento-grid" style="margin-top:1.5rem;">
+                    <div class="glass-panel" style="padding:1.5rem;grid-column:1/-1;">
+                        <div class="panel-header" style="margin-bottom:1rem;">
+                            <h2 class="panel-title"><i class="ri-folder-chart-line text-accent"></i> My Projects</h2>
+                            <a href="#" class="panel-link" data-view="projects">View all →</a>
+                        </div>
+                        <div class="projects-grid" id="member-projects-grid"><div class="loading-state"><i class="ri-loader-4-line ri-spin"></i></div></div>
+                    </div>
+                </div>
+                <!-- My Tasks -->
+                <div class="glass-panel" style="padding:1.5rem;margin-top:1.5rem;">
+                    <div class="panel-header" style="margin-bottom:1rem;">
+                        <h2 class="panel-title"><i class="ri-task-line text-accent"></i> My Tasks</h2>
+                        <a href="#" class="panel-link" data-view="kanban">Open Kanban →</a>
+                    </div>
+                    <div id="member-task-list" style="display:flex;flex-direction:column;gap:10px;"><div class="loading-state"><i class="ri-loader-4-line ri-spin"></i></div></div>
+                </div>
+                <!-- Profile Card -->
+                <div class="glass-panel" style="padding:1.5rem;margin-top:1.5rem;">
+                    <div class="panel-header" style="margin-bottom:1rem;">
+                        <h2 class="panel-title"><i class="ri-user-line text-accent"></i> My Profile</h2>
+                        <a href="#" class="panel-link" data-view="settings">Settings →</a>
+                    </div>
+                    <div id="member-profile-card" style="display:flex;align-items:center;gap:1.5rem;">
+                        <div id="member-profile-avatar" style="width:64px;height:64px;border-radius:50%;background:#6366f1;display:flex;align-items:center;justify-content:center;font-size:1.6rem;font-weight:700;color:#fff;flex-shrink:0;">?</div>
+                        <div>
+                            <div id="member-profile-name" style="font-size:1.2rem;font-weight:600;color:#f0f4ff;">Loading...</div>
+                            <div id="member-profile-email" style="color:#6b7a9e;font-size:0.9rem;margin-top:2px;"></div>
+                            <div id="member-profile-pos" style="margin-top:6px;"><span style="background:rgba(99,102,241,0.15);color:#a78bfa;padding:3px 10px;border-radius:20px;font-size:0.78rem;">Team Member</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="view" id="view-projects">
+            <div class="dashboard-content">
+                <div class="page-header">
+                    <div>
+                        <h1 class="page-title">Projects</h1>
+                        <p class="subtitle">Tracking <strong>4 active projects</strong> across your portfolio.</p>
+                    </div>
+                    <button class="btn-primary" id="btn-new-project"><i class="ri-add-line"></i> New Project</button>
+                </div>
+                <div class="projects-section">
+                    <h2 style="font-size: 1.1rem; margin-bottom: 1rem;">Active Projects</h2>
+                    <div class="projects-grid" id="active-projects-grid"><div class="loading-state"><i class="ri-loader-4-line ri-spin"></i></div></div>
+                </div>
+                <div class="projects-section" style="margin-top: 2rem;">
+                    <h2 style="font-size: 1.1rem; margin-bottom: 1rem;">Completed Projects</h2>
+                    <div class="projects-grid" id="completed-projects-grid"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- KANBAN VIEW -->
+        <div class="view" id="view-kanban">
+            <div class="dashboard-content">
+                <div class="page-header">
+                    <div>
+                        <h1 class="page-title">Kanban Board</h1>
+                        <p class="subtitle">Drag cards between columns to update task status instantly.</p>
+                    </div>
+                    <div style="display:flex;gap:10px;align-items:center">
+                        <select class="settings-select" id="kanban-filter" style="min-width:160px">
+                            <option value="all">All Projects</option>
+                            <option value="Omega Platform">Omega Platform</option>
+                            <option value="Atlas App">Atlas App</option>
+                            <option value="Mercury Dashboard">Mercury Dashboard</option>
+                            <option value="Nova API">Nova API</option>
+                        </select>
+                        <button class="btn-primary" id="btn-quick-task"><i class="ri-add-line"></i> Quick Add</button>
+                    </div>
+                </div>
+                <!-- Quick add task form -->
+                <div class="quick-add-form glass-panel hidden" id="quick-add-form">
+                    <div class="quick-add-row">
+                        <input type="text" class="settings-input" id="qa-title" placeholder="Task title..." style="flex:1">
+                        <select class="settings-select" id="qa-project">
+                            <option>Omega Platform</option>
+                            <option>Atlas App</option>
+                            <option>Mercury Dashboard</option>
+                            <option>Nova API</option>
+                        </select>
+                        <select class="settings-select" id="qa-assignee">
+                            <option>Alex</option><option>Alice</option>
+                            <option>Bob</option><option>Sarah</option>
+                        </select>
+                        <select class="settings-select" id="qa-priority">
+                            <option>medium</option><option>high</option>
+                            <option>critical</option><option>low</option>
+                        </select>
+                        <button class="btn-primary" id="qa-submit"><i class="ri-check-line"></i> Add</button>
+                        <button class="modal-close" id="qa-cancel" style="border:none"><i class="ri-close-line"></i></button>
+                    </div>
+                </div>
+                <div class="kanban-board" id="kanban-board">
+                    <div class="loading-state"><i class="ri-loader-4-line ri-spin"></i></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- AGENTS VIEW -->
+        <div class="view" id="view-agents">
+            <div class="dashboard-content">
+                <div class="page-header">
+                    <div>
+                        <h1 class="page-title">Agent Swarm</h1>
+                        <p class="subtitle">Specialized AI agents working autonomously for your team.</p>
+                    </div>
+                </div>
+                <div class="agents-full-grid" id="agents-full-grid"><div class="loading-state"><i class="ri-loader-4-line ri-spin"></i></div></div>
+            </div>
+        </div>
+
+        <!-- SETTINGS VIEW -->
+        <div class="view" id="view-settings">
+            <div class="dashboard-content">
+                <div class="page-header">
+                    <div>
+                        <h1 class="page-title">Settings</h1>
+                        <p class="subtitle">Configure Nexus integrations, AI preferences, and notifications.</p>
+                    </div>
+                </div>
+                <div class="settings-grid">
+                    <!-- AI Configuration -->
+                    <div class="settings-card glass-panel">
+                        <div class="settings-card-header"><i class="ri-robot-2-line text-accent"></i> AI Engine</div>
+                        <div class="settings-row">
+                            <div class="settings-label"><span>AI Model</span><small>Powers the Nexus chat assistant</small></div>
+                            <select class="settings-select" id="setting-ai-model">
+                                <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
+                                <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
+                                <option value="gpt-4o">GPT-4o</option>
+                            </select>
+                        </div>
+                        <div class="settings-row">
+                            <div class="settings-label"><span>Gemini API Key</span><small>Get free key at aistudio.google.com</small></div>
+                            <div style="display:flex;gap:8px;">
+                                <input type="password" class="settings-input" id="setting-api-key" placeholder="AIza..." style="flex:1">
+                                <button class="btn-primary" style="padding:8px 14px;font-size:0.82rem" id="save-api-key-btn"><i class="ri-save-line"></i> Save</button>
+                            </div>
+                        </div>
+                        <div class="settings-row">
+                            <div class="settings-label"><span>Auto-summarize meetings</span><small>Scribe agent creates summaries automatically</small></div>
+                            <label class="toggle"><input type="checkbox" checked id="toggle-meetings"><span class="toggle-slider"></span></label>
+                        </div>
+                    </div>
+                    <!-- Notifications -->
+                    <div class="settings-card glass-panel">
+                        <div class="settings-card-header"><i class="ri-notification-3-line text-accent"></i> Notifications</div>
+                        <div class="settings-row">
+                            <div class="settings-label"><span>Risk Alerts</span><small>Notify when Sentinel flags risks</small></div>
+                            <label class="toggle"><input type="checkbox" checked id="toggle-risks"><span class="toggle-slider"></span></label>
+                        </div>
+                        <div class="settings-row">
+                            <div class="settings-label"><span>Daily Digest</span><small>Morning summary at 9:00 AM</small></div>
+                            <label class="toggle"><input type="checkbox" checked id="toggle-digest"><span class="toggle-slider"></span></label>
+                        </div>
+                        <div class="settings-row">
+                            <div class="settings-label"><span>Sprint Warnings</span><small>Alert 3 days before deadline</small></div>
+                            <label class="toggle"><input type="checkbox" id="toggle-sprint"><span class="toggle-slider"></span></label>
+                        </div>
+                    </div>
+                    <!-- Integrations -->
+                    <div class="settings-card glass-panel">
+                        <div class="settings-card-header"><i class="ri-links-line text-accent"></i> Integrations</div>
+                        <div class="integration-list">
+                            <div class="integration-item"><div class="integration-icon" style="background:#4a154b"><i class="ri-slack-line"></i></div><div class="integration-info"><span>Slack</span><small>Workspace connected</small></div><span class="integration-badge connected">Connected</span></div>
+                            <div class="integration-item"><div class="integration-icon" style="background:#1a73e8"><i class="ri-calendar-line"></i></div><div class="integration-info"><span>Google Calendar</span><small>Sync meetings & deadlines</small></div><span class="integration-badge connected">Connected</span></div>
+                            <div class="integration-item"><div class="integration-icon" style="background:#0052cc"><i class="ri-task-line"></i></div><div class="integration-info"><span>Jira</span><small>Not connected</small></div><button class="btn-connect">Connect</button></div>
+                            <div class="integration-item" id="github-integration-item"><div class="integration-icon" style="background:#000"><i class="ri-github-line"></i></div><div class="integration-info"><span>GitHub</span><small id="github-integration-status">Not connected</small></div><button class="btn-connect" id="btn-connect-github">Connect</button></div>
+                            <div class="integration-item"><div class="integration-icon" style="background:#e44d26"><i class="ri-zoom-in-line"></i></div><div class="integration-info"><span>Zoom</span><small>Auto-join & transcribe</small></div><button class="btn-connect">Connect</button></div>
+                        </div>
+                    </div>
+                    <!-- Keyboard Shortcuts -->
+                    <div class="settings-card glass-panel">
+                        <div class="settings-card-header"><i class="ri-keyboard-line text-accent"></i> Keyboard Shortcuts</div>
+                        <div class="shortcut-list">
+                            <div class="shortcut-item"><span>Open Dashboard</span><div class="keys"><kbd>D</kbd></div></div>
+                            <div class="shortcut-item"><span>Open Projects</span><div class="keys"><kbd>P</kbd></div></div>
+                            <div class="shortcut-item"><span>Open Agents</span><div class="keys"><kbd>A</kbd></div></div>
+                            <div class="shortcut-item"><span>Open Team</span><div class="keys"><kbd>T</kbd></div></div>
+                            <div class="shortcut-item"><span>Toggle Chat</span><div class="keys"><kbd>C</kbd></div></div>
+                            <div class="shortcut-item"><span>Generate Report</span><div class="keys"><kbd>G</kbd></div></div>
+                            <div class="shortcut-item"><span>Refresh Data</span><div class="keys"><kbd>R</kbd></div></div>
+                            <div class="shortcut-item"><span>Focus Search</span><div class="keys"><kbd>/</kbd></div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- VAULT VIEW -->
+        <div class="view" id="view-vault">
+            <div class="dashboard-content">
+                <div class="page-header">
+                    <div>
+                        <h1 class="page-title">Vault</h1>
+                        <p class="subtitle">Restore soft-deleted projects and team members.</p>
+                    </div>
+                </div>
+                <div class="projects-section">
+                    <h2 style="font-size: 1.1rem; margin-bottom: 1rem;">Deleted Projects (90 days retention)</h2>
+                    <div class="projects-grid" id="vault-projects-grid"><div class="loading-state"><i class="ri-archive-drawer-line"></i> No deleted projects</div></div>
+                </div>
+                <div class="projects-section" style="margin-top: 2rem;">
+                    <h2 style="font-size: 1.1rem; margin-bottom: 1rem;">Removed Team Members</h2>
+                    <div class="team-grid" id="vault-team-grid"><div class="loading-state"><i class="ri-user-unfollow-line"></i> No removed members</div></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TEAM VIEW -->
+        <div class="view" id="view-team">
+            <div class="dashboard-content">
+                <div class="page-header">
+                    <div>
+                        <h1 class="page-title">Team Workload</h1>
+                        <p class="subtitle">Real-time capacity and task distribution across your team.</p>
+                    </div>
+                    <button class="btn-primary" id="btn-add-member"><i class="ri-user-add-line"></i> Add Member</button>
+                </div>
+                <div class="team-grid" id="team-grid"><div class="loading-state"><i class="ri-loader-4-line ri-spin"></i></div></div>
+                <!-- Team Timeline Chart -->
+                <div class="chart-panel glass-panel" style="margin-top:1.5rem">
+                    <div class="panel-header">
+                        <h2 class="panel-title"><i class="ri-bar-chart-horizontal-line text-accent"></i> Workload Distribution by Project</h2>
+                    </div>
+                    <div class="chart-container" style="height:200px"><canvas id="workload-chart"></canvas></div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- ─── CHAT WIDGET ─── -->
+    <div class="chat-widget">
+        <button class="chat-toggle" id="chat-toggle" title="Ask Nexus AI">
+            <i class="ri-message-3-fill"></i>
+        </button>
+        <div class="chat-panel glass-panel hidden" id="chat-panel">
+            <div class="chat-header">
+                <div class="chat-title"><div class="chat-ai-dot"></div> Nexus AI Assistant</div>
+                <button class="chat-close" id="chat-close"><i class="ri-close-line"></i></button>
+            </div>
+            <div class="chat-messages" id="chat-messages">
+                <div class="message system">
+                    <div class="message-content">
+                        Hi! I'm Nexus. I can navigate the app, generate reports, and take actions.<br><br>
+                        <strong>Sarah is blocked on UI-198.</strong> Should I reassign to Alex?
+                    </div>
+                </div>
+                <div class="chat-suggestions">
+                    <button class="suggestion-chip" data-msg="What are the current project risks?"><i class="ri-shield-flash-line"></i> View risks</button>
+                    <button class="suggestion-chip" data-msg="Generate weekly report"><i class="ri-bar-chart-line"></i> Report</button>
+                    <button class="suggestion-chip" data-msg="Show team workload"><i class="ri-team-line"></i> Team</button>
+                    <button class="suggestion-chip" data-msg="Show projects overview"><i class="ri-folder-open-line"></i> Projects</button>
+                </div>
+            </div>
+            <div class="chat-input-area">
+                <input type="text" id="chat-input" placeholder="Type a command...">
+                <button class="chat-send" id="chat-send"><i class="ri-send-plane-fill"></i></button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ─── NOTIFICATION PANEL ─── -->
+<div class="notif-overlay hidden" id="notif-overlay"></div>
+<div class="notif-panel glass-panel hidden" id="notif-panel">
+    <div class="notif-header">
+        <h3><i class="ri-notification-3-line"></i> Notifications</h3>
+        <div style="display:flex;gap:8px;align-items:center">
+            <button class="notif-mark-all-btn" id="notif-mark-all"><i class="ri-check-double-line"></i> Mark all read</button>
+            <button class="modal-close" id="notif-close"><i class="ri-close-line"></i></button>
+        </div>
+    </div>
+    <div class="notif-list" id="notif-list">
+    </div>
+</div>
+
+<!-- ─── PROJECT DETAIL MODAL ─── -->
+<div class="modal-overlay hidden" id="project-modal-overlay">
+    <div class="modal-panel glass-panel" id="project-modal">
+        <div class="modal-header">
+            <div>
+                <div class="modal-eyebrow" id="modal-project-status-badge">On Track</div>
+                <div class="modal-title" id="modal-project-name">Project</div>
+                <div class="modal-subtitle" id="modal-project-desc"></div>
+            </div>
+            <div style="display:flex; gap: 8px;">
+                <button class="modal-close" id="report-project-btn" style="border:none; color: #a78bfa;" title="Download Project Report"><i class="ri-file-download-line"></i></button>
+                <button class="modal-close" id="edit-project-btn" style="border:none; color: #38bdf8;" title="Edit Deadline &amp; Meeting Time"><i class="ri-edit-line"></i></button>
+                <button class="modal-close" id="delete-project-btn" style="border:none; color: #f87171;" title="Move to Vault"><i class="ri-delete-bin-line"></i></button>
+                <button class="modal-close" id="project-modal-close"><i class="ri-close-line"></i></button>
+            </div>
+        </div>
+        <div class="modal-body">
+            <div class="modal-stats-row">
+                <div class="modal-stat-box">
+                    <div class="modal-stat-label">Progress</div>
+                    <div class="modal-stat-value" id="modal-progress-val">0%</div>
+                </div>
+                <div class="modal-stat-box">
+                    <div class="modal-stat-label">Tasks Done</div>
+                    <div class="modal-stat-value" id="modal-tasks-val">0/0</div>
+                </div>
+                <div class="modal-stat-box">
+                    <div class="modal-stat-label">Deadline</div>
+                    <div class="modal-stat-value" id="modal-deadline-val" style="cursor:pointer;" title="Click Edit to change">—</div>
+                </div>
+            </div>
+            <!-- Inline Edit Panel (hidden by default) -->
+            <div id="modal-edit-panel" style="display:none; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:1rem; margin-top:1rem; gap:12px; display:none;">
+                <div style="font-size:0.8rem; color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:10px;"><i class="ri-edit-line"></i> Edit Project Details</div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                    <div>
+                        <label style="font-size:0.78rem; color:var(--text-secondary); display:block; margin-bottom:4px;">Deadline</label>
+                        <input type="text" id="edit-deadline-input" class="settings-input" placeholder="e.g. Sep 1, 2026" style="width:100%;">
+                    </div>
+                    <div>
+                        <label style="font-size:0.78rem; color:var(--text-secondary); display:block; margin-bottom:4px;">Meeting Time</label>
+                        <input type="time" id="edit-meeting-time-input" class="settings-input" style="width:100%;">
+                    </div>
+                    <div style="grid-column:1/-1;">
+                        <label style="font-size:0.78rem; color:var(--text-secondary); display:block; margin-bottom:4px;">Meeting Link</label>
+                        <input type="url" id="edit-meeting-link-input" class="settings-input" placeholder="https://zoom.us/..." style="width:100%;">
+                    </div>
+                </div>
+                <div style="text-align:right; margin-top:10px;">
+                    <button class="btn-primary" id="save-project-edits-btn" style="font-size:0.85rem; padding:7px 16px;"><i class="ri-save-line"></i> Save Changes</button>
+                </div>
+            </div>
+            <div class="modal-progress-bar-wrap">
+                <div class="modal-progress-bar"><div class="modal-progress-fill" id="modal-progress-fill"></div></div>
+            </div>
+            <div id="modal-meeting-container" style="display:none; background:rgba(255,255,255,0.02); padding:1rem; border-radius:12px; margin-top:1.5rem; border:1px solid rgba(255,255,255,0.05);">
+                <div style="font-size:0.8rem; color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px;"><i class="ri-vidicon-line"></i> Meeting Details</div>
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <div id="modal-meeting-time" style="font-weight:500;"></div>
+                    <a href="#" id="modal-meeting-link" target="_blank" class="btn-primary" style="text-decoration:none; padding:6px 12px; font-size:0.85rem;"><i class="ri-video-chat-line"></i> Join</a>
+                </div>
+            </div>
+            <h3 class="modal-section-title" style="margin-top:2rem;"><i class="ri-task-line"></i> Tasks</h3>
+            <div class="modal-task-list" id="modal-task-list"><div class="loading-state"><i class="ri-loader-4-line ri-spin"></i></div></div>
+        </div>
+    </div>
+</div>
+
+<!-- ─── REPORT MODAL ─── -->
+<div class="modal-overlay hidden" id="report-modal-overlay">
+    <div class="modal-panel glass-panel" style="max-width:660px" id="report-modal">
+        <div class="modal-header">
+            <div>
+                <div class="modal-eyebrow">Auto-Generated by Nexus Sentinel</div>
+                <div class="modal-title">Weekly Executive Report</div>
+            </div>
+            <div style="display:flex;gap:10px;align-items:center">
+                <button class="btn-primary" style="padding:8px 14px;font-size:0.8rem" id="report-copy-btn"><i class="ri-file-copy-line"></i> Copy</button>
+                <button class="modal-close" id="report-modal-close"><i class="ri-close-line"></i></button>
+            </div>
+        </div>
+        <div class="modal-body" id="report-body"><div class="loading-state"><i class="ri-loader-4-line ri-spin"></i></div></div>
+    </div>
+</div>
+
+<!-- ─── PROJECT REPORT MODAL ─── -->
+<div class="modal-overlay hidden" id="proj-report-modal-overlay">
+    <div class="modal-panel glass-panel" style="max-width:680px">
+        <div class="modal-header">
+            <div>
+                <div class="modal-eyebrow">Project Intelligence Report</div>
+                <div class="modal-title" id="proj-report-title">Project Report</div>
+            </div>
+            <div style="display:flex;gap:10px;align-items:center">
+                <button class="btn-primary" style="padding:8px 14px;font-size:0.8rem" id="proj-report-download-btn"><i class="ri-download-line"></i> Download</button>
+                <button class="modal-close" id="proj-report-close"><i class="ri-close-line"></i></button>
+            </div>
+        </div>
+        <div class="modal-body" id="proj-report-body"><div class="loading-state"><i class="ri-loader-4-line ri-spin"></i></div></div>
+    </div>
+</div>
+
+<!-- ─── ONBOARDING TUTORIAL OVERLAY ─── -->
+<div id="onboarding-overlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9999;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);">
+    <div style="background:linear-gradient(135deg,#1a1f35,#0f1224);border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:2.5rem;max-width:560px;width:90%;position:relative;">
+        <div style="position:absolute;top:16px;right:16px;">
+            <button id="skip-tutorial-btn" style="background:none;border:1px solid rgba(255,255,255,0.15);color:#6b7a9e;padding:4px 12px;border-radius:6px;cursor:pointer;font-size:0.8rem;">Skip</button>
+        </div>
+        <!-- Step dots -->
+        <div id="tutorial-dots" style="display:flex;gap:6px;margin-bottom:1.5rem;">
+            <span class="tdot active" data-step="0"></span>
+            <span class="tdot" data-step="1"></span>
+            <span class="tdot" data-step="2"></span>
+            <span class="tdot" data-step="3"></span>
+            <span class="tdot" data-step="4"></span>
+        </div>
+        <div id="tutorial-icon" style="font-size:2.5rem;margin-bottom:1rem;color:#6366f1;"><i class="ri-hand-coin-line"></i></div>
+        <div id="tutorial-title" style="font-size:1.4rem;font-weight:700;color:#f0f4ff;margin-bottom:0.5rem;">Welcome to Nexus!</div>
+        <div id="tutorial-body" style="color:#8892b0;line-height:1.7;margin-bottom:2rem;">Nexus is your AI-powered project operations center. Let's take a 60-second tour to get you started.</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+            <button id="tutorial-prev-btn" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:#8892b0;padding:9px 20px;border-radius:8px;cursor:pointer;font-size:0.9rem;" disabled>← Back</button>
+            <span id="tutorial-step-counter" style="font-size:0.8rem;color:#6b7a9e;">Step 1 of 5</span>
+            <button id="tutorial-next-btn" style="background:linear-gradient(135deg,#6366f1,#8b5cf6);border:none;color:#fff;padding:9px 24px;border-radius:8px;cursor:pointer;font-weight:600;font-size:0.9rem;">Next →</button>
+        </div>
+    </div>
+</div>
+
+<!-- ─── GITHUB PAT MODAL ─── -->
+<div class="modal-overlay hidden" id="github-modal-overlay">
+    <div class="modal-panel glass-panel" style="max-width:460px">
+        <div class="modal-header">
+            <div>
+                <div class="modal-eyebrow">Integration Settings</div>
+                <div class="modal-title">Connect GitHub</div>
+            </div>
+            <button class="modal-close" id="github-modal-close"><i class="ri-close-line"></i></button>
+        </div>
+        <div class="modal-body">
+            <div style="font-size:0.85rem; color:var(--text-secondary); margin-bottom:15px; line-height:1.5;">
+                Enter a GitHub Personal Access Token (classic) to allow Nexus to monitor repositories and pull requests.
+                <br><br>
+                <a href="https://github.com/settings/tokens" target="_blank" style="color:#38bdf8; text-decoration:none;"><i class="ri-external-link-line"></i> Generate Token here</a>
+            </div>
+            <div class="settings-row" style="flex-direction:column;align-items:flex-start;gap:8px">
+                <label>Personal Access Token (PAT)</label>
+                <input type="password" id="github-pat-input" class="settings-input" style="width:100%" placeholder="ghp_...">
+            </div>
+            <div style="margin-top:20px;text-align:right">
+                <button class="btn-primary" id="github-submit-btn"><i class="ri-link"></i> Connect GitHub</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.tdot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,0.2);transition:background 0.3s;}
+.tdot.active{background:#6366f1;width:24px;border-radius:4px;}
+</style>
+
+<!-- ─── NEW PROJECT MODAL ─── -->
+<div class="modal-overlay hidden" id="new-project-modal-overlay">
+    <div class="modal-panel glass-panel" style="max-width:500px">
+        <div class="modal-header">
+            <div>
+                <div class="modal-eyebrow">Portfolio Management</div>
+                <div class="modal-title">Create New Project</div>
+            </div>
+            <button class="modal-close" id="new-project-close"><i class="ri-close-line"></i></button>
+        </div>
+        <div class="modal-body">
+            <div class="settings-row" style="flex-direction:column;align-items:flex-start;gap:8px">
+                <label>Project Name</label>
+                <input type="text" id="np-name" class="settings-input" style="width:100%" placeholder="e.g. Project Apollo">
+            </div>
+            <div class="settings-row" style="flex-direction:column;align-items:flex-start;gap:8px">
+                <label>Description</label>
+                <input type="text" id="np-desc" class="settings-input" style="width:100%" placeholder="Short description...">
+            </div>
+            <div class="settings-row" style="flex-direction:column;align-items:flex-start;gap:8px">
+                <label>Color Theme</label>
+                <select id="np-color" class="settings-select" style="width:100%">
+                    <option value="#6366f1">Indigo</option>
+                    <option value="#10b981">Emerald</option>
+                    <option value="#f59e0b">Amber</option>
+                    <option value="#0ea5e9">Sky Blue</option>
+                    <option value="#f43f5e">Rose</option>
+                    <option value="#8b5cf6">Violet</option>
+                </select>
+            </div>
+            <div class="settings-row" style="flex-direction:column;align-items:flex-start;gap:8px">
+                <label>Deadline</label>
+                <input type="text" id="np-deadline" class="settings-input" style="width:100%" placeholder="e.g. Sep 1, 2026">
+            </div>
+            <div class="settings-row" style="flex-direction:column;align-items:flex-start;gap:8px">
+                <label>Meeting Link</label>
+                <input type="url" id="np-meeting" class="settings-input" style="width:100%" placeholder="e.g. https://zoom.us/j/123456789">
+            </div>
+            <div class="settings-row" style="flex-direction:column;align-items:flex-start;gap:8px">
+                <label>Meeting Time</label>
+                <input type="time" id="np-meeting-time" class="settings-input" style="width:100%">
+            </div>
+            <div style="margin-top:20px;text-align:right">
+                <button class="btn-primary" id="np-submit">Create Project</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ─── AGENT DETAIL MODAL ─── -->
+<div class="modal-overlay hidden" id="agent-modal-overlay">
+    <div class="modal-panel glass-panel" style="max-width:600px">
+        <div class="modal-header">
+            <div style="display:flex;align-items:center;gap:15px">
+                <div class="agent-card-icon planner" id="agent-modal-icon"><i class="ri-robot-2-line"></i></div>
+                <div>
+                    <div class="modal-title" id="agent-modal-name">Agent Name</div>
+                    <div class="modal-eyebrow" id="agent-modal-role" style="margin-bottom:0;margin-top:2px">Role</div>
+                </div>
+            </div>
+            <button class="modal-close" id="agent-modal-close"><i class="ri-close-line"></i></button>
+        </div>
+        <div class="modal-body">
+            <h3 class="modal-section-title">Current Objective</h3>
+            <p id="agent-modal-task" style="color:#f0f4ff;font-size:1.1rem;margin-bottom:1.5rem">Task description</p>
+            <h3 class="modal-section-title">Recent Activity</h3>
+            <div class="task-card" style="margin-bottom:0">
+                <div class="task-title" id="agent-modal-last"><i class="ri-time-line"></i> Last action</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ─── TEAM MEMBER DETAIL MODAL ─── -->
+<div class="modal-overlay hidden" id="team-modal-overlay">
+    <div class="modal-panel glass-panel" style="max-width:600px">
+        <div class="modal-header">
+            <div style="display:flex;align-items:center;gap:15px">
+                <div class="member-avatar" id="team-modal-avatar" style="width:48px;height:48px;font-size:1.5rem">A</div>
+                <div>
+                    <div class="modal-title" id="team-modal-name">Name</div>
+                    <div class="modal-eyebrow" id="team-modal-role" style="margin-bottom:0;margin-top:2px">Role</div>
+                </div>
+            </div>
+            <button class="modal-close" id="team-modal-close"><i class="ri-close-line"></i></button>
+        </div>
+        <div class="modal-body">
+            <div class="modal-stats-row" style="margin-bottom:20px">
+                <div class="modal-stat-box"><div class="modal-stat-label">Capacity Used</div><div class="modal-stat-value" id="team-modal-capacity">0%</div></div>
+                <div class="modal-stat-box"><div class="modal-stat-label">Active Tasks</div><div class="modal-stat-value" id="team-modal-taskcount">0</div></div>
+                <div class="modal-stat-box"><div class="modal-stat-label">Status</div><div class="modal-stat-value" id="team-modal-status">Healthy</div></div>
+            </div>
+            <!-- Task Status Breakdown -->
+            <div id="team-modal-status-bar" style="display:flex;gap:6px;margin-bottom:20px;height:8px;border-radius:4px;overflow:hidden"></div>
+            <div id="team-modal-status-legend" style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:20px;font-size:0.78rem;color:#6b7a9e"></div>
+            <h3 class="modal-section-title"><i class="ri-task-line"></i> Assigned Tasks</h3>
+            <div class="modal-task-list" id="team-modal-tasks"></div>
+        </div>
+        <div style="padding:0 24px 20px;display:flex;justify-content:flex-end">
+            <button class="btn-primary" id="team-modal-edit-btn" style="font-size:0.85rem;padding:8px 18px"><i class="ri-edit-2-line"></i> Edit Profile</button>
+        </div>
+    </div>
+</div>
+
+<!-- ─── MEMBER PROFILE EDIT MODAL ─── -->
+<div class="modal-overlay hidden" id="member-edit-modal-overlay">
+    <div class="modal-panel glass-panel" style="max-width:460px">
+        <div class="modal-header">
+            <div>
+                <div class="modal-eyebrow">Team Management</div>
+                <div class="modal-title">Edit Member Profile</div>
+            </div>
+            <button class="modal-close" id="member-edit-close"><i class="ri-close-line"></i></button>
+        </div>
+        <div class="modal-body">
+            <input type="hidden" id="me-original-email">
+            <div class="settings-row" style="flex-direction:column;align-items:flex-start;gap:8px">
+                <label>Full Name</label>
+                <input type="text" id="me-name" class="settings-input" style="width:100%" placeholder="Full name">
+            </div>
+            <div class="settings-row" style="flex-direction:column;align-items:flex-start;gap:8px">
+                <label>Email ID</label>
+                <input type="email" id="me-email" class="settings-input" style="width:100%" placeholder="email@company.com">
+            </div>
+            <div class="settings-row" style="flex-direction:column;align-items:flex-start;gap:8px">
+                <label>Password</label>
+                <div style="position:relative;width:100%">
+                    <input type="password" id="me-password" class="settings-input" style="width:100%" placeholder="Password">
+                    <button class="login-eye-btn" id="me-eye-btn" type="button" tabindex="-1"><i class="ri-eye-off-line" id="me-eye-icon"></i></button>
+                </div>
+            </div>
+            <div class="settings-row" style="flex-direction:column;align-items:flex-start;gap:8px">
+                <label>Role / Title</label>
+                <input type="text" id="me-role" class="settings-input" style="width:100%" placeholder="e.g. Backend Engineer">
+            </div>
+            <div class="settings-row" style="flex-direction:column;align-items:flex-start;gap:8px">
+                <label>Position</label>
+                <select id="me-position" class="settings-select" style="width:100%">
+                    <option value="member">Team Member</option>
+                    <option value="admin">Admin</option>
+                </select>
+            </div>
+            <div style="margin-top:20px;text-align:right">
+                <button class="btn-primary" id="me-submit"><i class="ri-save-line"></i> Save Changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ─── ADD TEAM MEMBER MODAL ─── -->
+<div class="modal-overlay hidden" id="add-member-modal-overlay">
+    <div class="modal-panel glass-panel" style="max-width:460px">
+        <div class="modal-header">
+            <div>
+                <div class="modal-eyebrow">Team Management</div>
+                <div class="modal-title">Add Team Member</div>
+            </div>
+            <button class="modal-close" id="add-member-close"><i class="ri-close-line"></i></button>
+        </div>
+        <div class="modal-body">
+            <div class="settings-row" style="flex-direction:column;align-items:flex-start;gap:8px">
+                <label>Full Name</label>
+                <input type="text" id="am-name" class="settings-input" style="width:100%" placeholder="e.g. Jordan Lee">
+            </div>
+            <div class="settings-row" style="flex-direction:column;align-items:flex-start;gap:8px">
+                <label>Email ID</label>
+                <input type="email" id="am-email" class="settings-input" style="width:100%" placeholder="e.g. jordan@company.com">
+            </div>
+            <div class="settings-row" style="flex-direction:column;align-items:flex-start;gap:8px">
+                <label>Password</label>
+                <div style="position:relative;width:100%">
+                    <input type="password" id="am-password" class="settings-input" style="width:100%" placeholder="Enter temporary password">
+                    <button class="login-eye-btn" id="am-eye-btn" type="button" tabindex="-1"><i class="ri-eye-off-line" id="am-eye-icon"></i></button>
+                </div>
+            </div>
+            <div class="settings-row" style="flex-direction:column;align-items:flex-start;gap:8px">
+                <label>Role / Title</label>
+                <input type="text" id="am-role" class="settings-input" style="width:100%" placeholder="e.g. Backend Engineer">
+            </div>
+            <div class="settings-row" style="flex-direction:column;align-items:flex-start;gap:8px">
+                <label>Position</label>
+                <select id="am-position" class="settings-select" style="width:100%">
+                    <option value="member">Team Member</option>
+                    <option value="admin">Admin</option>
+                </select>
+            </div>
+            <div class="settings-row" style="flex-direction:column;align-items:flex-start;gap:8px">
+                <label>Avatar Color</label>
+                <select id="am-color" class="settings-select" style="width:100%">
+                    <option value="#6366f1">Indigo</option>
+                    <option value="#10b981">Emerald</option>
+                    <option value="#f59e0b">Amber</option>
+                    <option value="#0ea5e9">Sky Blue</option>
+                    <option value="#f43f5e">Rose</option>
+                    <option value="#8b5cf6">Violet</option>
+                    <option value="#ec4899">Pink</option>
+                </select>
+            </div>
+            <div style="margin-top:20px;text-align:right">
+                <button class="btn-primary" id="am-submit"><i class="ri-user-add-line"></i> Add Member</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ─── GENERIC CONFIRMATION MODAL ─── -->
+<div class="modal-overlay hidden" id="generic-confirm-overlay">
+    <div class="modal-panel glass-panel" style="max-width:400px; padding: 24px;">
+        <div class="modal-header" style="margin-bottom: 15px;">
+            <div>
+                <div class="modal-eyebrow" id="generic-confirm-eyebrow">Confirm Action</div>
+                <div class="modal-title" id="generic-confirm-title" style="font-size: 1.1rem; line-height: 1.4;">Are you sure?</div>
+            </div>
+            <button class="modal-close" id="generic-confirm-close"><i class="ri-close-line"></i></button>
+        </div>
+        <div class="modal-body">
+            <p id="generic-confirm-message" style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 20px; line-height: 1.5;"></p>
+            <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                <button class="btn-secondary" id="generic-confirm-cancel">Cancel</button>
+                <button class="btn-primary" id="generic-confirm-ok">OK</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ─── TASK DONE CONFIRMATION MODAL ─── -->
+<div class="modal-overlay hidden" id="task-done-overlay">
+    <div class="task-done-modal glass-panel" id="task-done-modal">
+        <div class="task-done-header">
+            <div class="task-done-icon-ring">
+                <div class="task-done-icon-inner">
+                    <i class="ri-checkbox-circle-fill"></i>
+                </div>
+            </div>
+        </div>
+        <div class="task-done-body">
+            <h2 class="task-done-title">Mark as Complete?</h2>
+            <p class="task-done-subtitle">You're about to mark this task as fully done:</p>
+            <div class="task-done-name" id="task-done-name">Task Name</div>
+            <p class="task-done-warning"><i class="ri-information-line"></i> This action confirms the task is fully completed and moves it to the Done column.</p>
+        </div>
+        <div class="task-done-actions">
+            <button class="task-done-cancel" id="task-done-cancel"><i class="ri-close-line"></i> Cancel</button>
+            <button class="task-done-confirm" id="task-done-confirm"><i class="ri-checkbox-circle-line"></i> Mark Complete</button>
+        </div>
+    </div>
+</div>
+
+<!-- ─── TOAST NOTIFICATIONS ─── -->
+<div class="toast-container" id="toast-container"></div>
+
+    <script src="app.js?v=14" defer></script>
+</body>
+</html>

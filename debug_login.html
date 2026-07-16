@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Login Debug</title>
+  <style>
+    body { background:#0f0f1a; color:#ccd6f6; font-family:monospace; padding:2rem; }
+    input { display:block; margin:8px 0; padding:8px; background:#1a1a2e; border:1px solid #333; color:white; width:300px; }
+    button { margin:8px 0; padding:10px 20px; background:#6366f1; color:white; border:none; cursor:pointer; }
+    #log { margin-top:1rem; background:#0a0a15; padding:1rem; border:1px solid #333; min-height:200px; white-space:pre-wrap; }
+    .err { color:#f43f5e; }
+    .ok { color:#10b981; }
+    .warn { color:#f59e0b; }
+  </style>
+</head>
+<body>
+  <h2>Login Debug Tool</h2>
+  <input type="email" id="email" placeholder="Email" value="admin@nexus.ai">
+  <input type="password" id="password" placeholder="Password" value="password">
+  <button onclick="testLogin()">Test Login</button>
+  <button onclick="clearDB()">Clear & Reset DB</button>
+  <button onclick="inspectDB()">Inspect DB</button>
+  <div id="log"></div>
+  <script>
+    const log = document.getElementById('log');
+    function add(msg, cls='') {
+      const d = document.createElement('div');
+      d.className = cls;
+      d.textContent = msg;
+      log.appendChild(d);
+    }
+    function inspectDB() {
+      log.innerHTML = '';
+      const raw = localStorage.getItem('nexus_usersDB');
+      if (!raw) { add('nexus_usersDB: NOT FOUND', 'warn'); return; }
+      try {
+        const db = JSON.parse(raw);
+        add('DB users:', 'ok');
+        db.forEach(u => add(`  email=${u.email} pass=${u.password} role=${u.position}`));
+      } catch(e) { add('PARSE ERROR: ' + e.message, 'err'); }
+    }
+    function clearDB() {
+      localStorage.removeItem('nexus_usersDB');
+      const db = [
+        { name: 'Admin User', email: 'admin@nexus.ai', password: 'password', position: 'admin' },
+        { name: 'Sarah Jenkins', email: 'sarah.j@company.com', password: 'password', position: 'member' }
+      ];
+      localStorage.setItem('nexus_usersDB', JSON.stringify(db));
+      add('DB reset.', 'ok');
+      inspectDB();
+    }
+    function testLogin() {
+      log.innerHTML = '';
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+      add('Testing: ' + email);
+      let db;
+      try { db = JSON.parse(localStorage.getItem('nexus_usersDB')); } catch(e) { add('Parse error: ' + e.message, 'err'); return; }
+      if (!db) { add('DB is null. Click Reset DB first.', 'warn'); return; }
+      const u = db.find(u => u.email === email);
+      if (!u) { add('No user found with that email.', 'err'); return; }
+      if (u.password !== password) { add('Wrong password. Stored: ' + u.password, 'err'); return; }
+      add('LOGIN WOULD SUCCEED for ' + u.name + ' as ' + u.position, 'ok');
+    }
+    window.onload = inspectDB;
+  </script>
+</body>
+</html>
