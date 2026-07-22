@@ -1,8 +1,9 @@
 // Determine the API URL dynamically
-// When hosted, you MUST replace the fallback URL with your actual backend URL (e.g., 'https://your-backend.onrender.com/api')
-const API = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+// Since FastAPI serves the frontend directly, we can use a relative '/api' path.
+// The file protocol fallback remains for local testing by directly double-clicking index.html
+const API = (window.location.protocol === 'file:' || window.location.hostname === '')
     ? 'http://localhost:8000/api'
-    : 'https://YOUR_BACKEND_URL_HERE/api'; // <-- UPDATE THIS FOR YOUR HOSTED BACKEND
+    : '/api';
 
 // ══════════════════════════════════════════════════════════════════════════════
 // SECURITY UTILITIES
