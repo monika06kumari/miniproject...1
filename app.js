@@ -1660,8 +1660,8 @@ document.getElementById('global-search').addEventListener('input', e => {
     const q = e.target.value.toLowerCase().trim();
     if (!q) return;
     if (['risk','block','delay'].some(w=>q.includes(w))) switchView('dashboard');
-    else if (['project','omega','atlas','mercury','nova'].some(w=>q.includes(w))) switchView('projects');
-    else if (['team','alice','bob','sarah','alex','capacity'].some(w=>q.includes(w))) switchView('team');
+    else if (['project'].some(w=>q.includes(w))) switchView('projects');
+    else if (['team','capacity'].some(w=>q.includes(w))) switchView('team');
     else if (['agent','sentinel','strategist','scribe','executor'].some(w=>q.includes(w))) switchView('agents');
 });
 document.getElementById('global-search').addEventListener('keypress', e => {

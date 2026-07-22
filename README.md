@@ -12,8 +12,19 @@ This project contains a Python backend (FastAPI) and a pure HTML/JS frontend.
 
 ## 🚀 Setup Instructions
 
-### 1. Backend Setup (Local Development)
+### 1. Prerequisites
+- Python 3.9+
+- A [Supabase](https://supabase.com/) account (Free tier is fine)
+- A Google Gemini API Key
 
+### 2. Supabase Database Setup
+1. Create a new project in Supabase.
+2. Go to the SQL Editor in your Supabase dashboard.
+3. Open the `database/schema.sql` file from this project.
+4. Copy the entire contents of `schema.sql` and paste it into the Supabase SQL Editor.
+5. Click **Run** to execute the script. This will create all the necessary tables (`team_members`, `projects`, `tasks`, `activity`) with the correct columns and default policies.
+
+### 3. Backend Setup (Local Development)
 1. Navigate to the backend directory:
    ```bash
    cd backend
@@ -31,18 +42,28 @@ This project contains a Python backend (FastAPI) and a pure HTML/JS frontend.
    pip install -r requirements.txt
    ```
 4. Setup environment variables:
-   - Rename `.env.example` to `.env`
-   - Fill in your actual `SUPABASE_URL`, `SUPABASE_KEY`, and `GEMINI_API_KEY`.
+   - Rename `.env.example` to `.env` (or create a `.env` file if it doesn't exist).
+   - Fill in your actual API keys:
+     ```env
+     SUPABASE_URL=your_supabase_project_url
+     SUPABASE_KEY=your_supabase_anon_key
+     GEMINI_API_KEY=your_gemini_api_key
+     ```
 5. Run the server:
    ```bash
+   py main.py
+   # OR
    uvicorn main:app --reload
    ```
    The backend will start on `http://localhost:8000`.
 
-### 2. Frontend Setup
-
-1. Open `app.js` and ensure the `API` constant on line 5 points to your backend URL (e.g. `http://localhost:8000/api` for local development, or your hosted URL in production).
-2. You can open `index.html` directly in your browser, or use a local server like Live Server (VS Code Extension).
+### 4. Frontend Setup
+1. Open `app.js` and ensure the `API` constant on line 5 points to your backend URL:
+   ```javascript
+   const API = 'http://localhost:8000/api';
+   ```
+2. Open `index.html` directly in your browser, or use a local server like Live Server (VS Code Extension).
+3. Click "Create Account" on the login page to register your admin user. Your dashboard will start fresh and clean!
 
 ---
 
