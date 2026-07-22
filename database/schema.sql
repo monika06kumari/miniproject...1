@@ -26,15 +26,8 @@ CREATE TABLE IF NOT EXISTS public.projects (
     active BOOLEAN DEFAULT true,
     deleted_at TIMESTAMP DEFAULT NULL
 );
--- 3. Insert initial projects
-INSERT INTO public.projects (id, name, description, progress, status, deadline, color) VALUES 
-('omega', 'Omega Platform', 'Core B2B SaaS platform rebuild', 62, 'at_risk', 'Aug 15, 2026', '#6366f1'),
-('atlas', 'Atlas Mobile App', 'Cross-platform customer mobile experience', 81, 'on_track', 'Jul 30, 2026', '#10b981'),
-('mercury', 'Mercury Dashboard', 'Real-time analytics & reporting UI', 40, 'at_risk', 'Sep 1, 2026', '#f59e0b'),
-('nova', 'Nova API Gateway', 'Microservices API unification layer', 95, 'on_track', 'Jun 28, 2026', '#0ea5e9')
-ON CONFLICT (id) DO NOTHING;
 
--- 4. Create activity table
+-- 3. Create activity table
 CREATE TABLE IF NOT EXISTS public.activity (
     id SERIAL PRIMARY KEY,
     day TEXT NOT NULL,
@@ -42,35 +35,37 @@ CREATE TABLE IF NOT EXISTS public.activity (
     added INTEGER DEFAULT 0
 );
 
--- 5. Create team_members table
---    active = false means "removed" (soft-delete preserves task history)
+-- 4. Create team_members table
+--    - role: job title (e.g., "Backend Engineer")
+--    - position: access level ("admin" or "member")
+--    - password: hashed password for login
+--    - active: false means soft-deleted (preserves task history)
 CREATE TABLE IF NOT EXISTS public.team_members (
     id SERIAL PRIMARY KEY,
     name TEXT NOT NULL,
     role TEXT NOT NULL,
+    position TEXT DEFAULT 'member',
     avatar_bg TEXT DEFAULT '#6366f1',
     capacity INTEGER DEFAULT 0,
     tasks INTEGER DEFAULT 0,
     status TEXT DEFAULT 'healthy',
-    active BOOLEAN DEFAULT true
+    active BOOLEAN DEFAULT true,
+    email TEXT UNIQUE,
+    password TEXT DEFAULT ''
 );
 
--- 6. Seed default team members
-INSERT INTO public.team_members (name, role, avatar_bg, capacity, tasks, status, active) VALUES
-('Alice', 'Frontend Engineer',  '#6366f1', 90, 8, 'overloaded', true),
-('Bob',   'Backend Engineer',   '#0ea5e9', 75, 6, 'healthy',    true),
-('Sarah', 'UI/UX Designer',     '#f43f5e', 60, 4, 'pto_friday', true),
-('Alex',  'Full-Stack Engineer','#10b981', 85, 7, 'healthy',    true)
-ON CONFLICT DO NOTHING;
-
 -- ─────────────────────────────────────────────────────────────────────────────
--- MIGRATION: Run these if you already have an existing 'projects' table
--- and need to add the new columns (safe to run multiple times via ALTER)
+-- MIGRATIONS: Safe to run on existing databases (idempotent)
 -- ─────────────────────────────────────────────────────────────────────────────
 
+-- Add missing columns to projects table
 ALTER TABLE public.projects ADD COLUMN IF NOT EXISTS meeting_time TEXT DEFAULT '';
 ALTER TABLE public.projects ADD COLUMN IF NOT EXISTS active BOOLEAN DEFAULT true;
 ALTER TABLE public.projects ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP DEFAULT NULL;
 
--- Update all existing projects to be active (in case the column was just added)
+-- Add missing columns to team_members table
+ALTER TABLE public.team_members ADD COLUMN IF NOT EXISTS password TEXT DEFAULT '';
+ALTER TABLE public.team_members ADD COLUMN IF NOT EXISTS position TEXT DEFAULT 'member';
+
+-- Ensure all existing projects are active
 UPDATE public.projects SET active = true WHERE active IS NULL;

@@ -328,16 +328,12 @@ class TeamMemberUpdate(BaseModel):
 
 # ─── Static Data ──────────────────────────────────────────────────────────────
 AGENTS = [
-    {"id":"planner","name":"The Strategist","role":"planner","task":"Re-allocating Sprint 4 tasks due to Sarah's Friday PTO.","status":"Active","icon":"ri-node-tree","last_action":"Adjusted 3 task deadlines"},
-    {"id":"sentinel","name":"The Sentinel","role":"sentinel","task":"Monitoring PR velocity & Slack sentiment for #proj-omega.","status":"Active","icon":"ri-radar-line","last_action":"Flagged AUTH-402 delay risk"},
-    {"id":"executor","name":"The Executor","role":"executor","task":"Drafting weekly stakeholder update email.","status":"Idle","icon":"ri-flashlight-line","last_action":"Sent 2 task reminders"},
-    {"id":"scribe","name":"The Scribe","role":"scribe","task":"Transcribed Monday all-hands. Extracted 6 action items.","status":"Idle","icon":"ri-quill-pen-line","last_action":"Summarized Zoom call #2847"},
+    {"id":"planner","name":"The Strategist","role":"planner","task":"Awaiting instructions...","status":"Idle","icon":"ri-node-tree","last_action":"None"},
+    {"id":"sentinel","name":"The Sentinel","role":"sentinel","task":"Awaiting instructions...","status":"Idle","icon":"ri-radar-line","last_action":"None"},
+    {"id":"executor","name":"The Executor","role":"executor","task":"Awaiting instructions...","status":"Idle","icon":"ri-flashlight-line","last_action":"None"},
+    {"id":"scribe","name":"The Scribe","role":"scribe","task":"Awaiting instructions...","status":"Idle","icon":"ri-quill-pen-line","last_action":"None"},
 ]
-RISKS = [
-    {"id":1,"title":"Backend API Delay Predicted","time":"10 mins ago","desc":"AUTH-402 will likely miss Thursday's deadline by ~2 days based on PR velocity.","severity":"high","actionText":"Adjust Timeline","project":"Omega Platform"},
-    {"id":2,"title":"Meeting Overload — Frontend Team","time":"1 hour ago","desc":"Alice & Bob have 15+ hours of meetings, reducing dev capacity by 38%.","severity":"medium","actionText":"Cancel Syncs","project":"Atlas App"},
-    {"id":3,"title":"PTO Coverage Gap","time":"2 hours ago","desc":"Sarah is out Friday. UI-198 has no backup reviewer assigned.","severity":"medium","actionText":"Reassign Task","project":"Mercury Dashboard"},
-]
+RISKS = []
 NOTIFICATIONS = []
 # PROJECTS removed, now using Supabase table
 import json
@@ -347,12 +343,7 @@ def load_team():
     if os.path.exists(TEAM_FILE):
         with open(TEAM_FILE, "r") as f:
             return json.load(f)
-    return [
-        {"name":"Alice","role":"Frontend Engineer","avatar_bg":"#6366f1","capacity":90,"tasks":8,"status":"overloaded"},
-        {"name":"Bob","role":"Backend Engineer","avatar_bg":"#0ea5e9","capacity":75,"tasks":6,"status":"healthy"},
-        {"name":"Sarah","role":"UI/UX Designer","avatar_bg":"#f43f5e","capacity":60,"tasks":4,"status":"pto_friday"},
-        {"name":"Alex","role":"Full-Stack Engineer","avatar_bg":"#10b981","capacity":85,"tasks":7,"status":"healthy"},
-    ]
+    return []
 
 def save_team(team_data):
     with open(TEAM_FILE, "w") as f:
@@ -524,20 +515,7 @@ async def login_user(req: LoginRequest, request: Request):
     if not check_login_rate_limit(client_ip):
         raise HTTPException(status_code=429, detail="Too many login attempts. Please wait 60 seconds.")
 
-    # Read credentials from environment (never hardcoded)
-    admin_email = os.environ.get("NEXUS_ADMIN_EMAIL", "admin@nexus.ai")
-    admin_password_hash = os.environ.get("NEXUS_ADMIN_PASS_HASH", "")
-
-    # Constant-time check for default admin (supports both hashed and legacy env value)
-    if req.email == admin_email:
-        # If no hash set in env, check against legacy plaintext env var
-        admin_plain = os.environ.get("NEXUS_ADMIN_PASS", "")
-        if (admin_password_hash and verify_password(req.password, admin_password_hash)) or \
-           (admin_plain and hmac.compare_digest(req.password, admin_plain)):
-            token = create_session(admin_email, "admin", "Admin User")
-            return {"name": "Admin User", "email": admin_email, "role": "admin", "token": token}
-
-    # Check team members (with automatic password migration to hashed format)
+    # ── Check local db_team.json first (admins created via sign-up) ──
     for m in TEAM:
         if m.get("email") == req.email and m.get("active", True):
             stored_pw = m.get("password", "")
@@ -546,13 +524,185 @@ async def login_user(req: LoginRequest, request: Request):
                 if stored_pw and not stored_pw.startswith("pbkdf2:"):
                     m["password"] = hash_password(req.password)
                     save_team(TEAM)
-                role = m.get("position", "member")
+                role = m.get("position", m.get("role", "member"))
                 name = m.get("name", "User")
                 token = create_session(req.email, role, name)
                 return {"name": name, "email": req.email, "role": role, "token": token}
 
+    # ── Check Supabase for team members added by admin ──
+    if supabase:
+        try:
+            res = supabase.table('team_members').select('*').eq('email', req.email).eq('active', True).execute()
+            if res.data:
+                member = res.data[0]
+                stored_pw = member.get("password", "")
+                if verify_password(req.password, stored_pw):
+                    role = member.get("position", member.get("role", "member"))
+                    name = member.get("name", "User")
+                    # Sync this member into local TEAM list for future lookups
+                    if not any(m.get('email') == req.email for m in TEAM):
+                        TEAM.append(member)
+                        save_team(TEAM)
+                    token = create_session(req.email, role, name)
+                    return {"name": name, "email": req.email, "role": role, "token": token}
+        except Exception:
+            pass  # Fall through to 401
+
     # Generic error — do not hint whether email or password was wrong
     raise HTTPException(status_code=401, detail="Invalid email or password")
+
+# ─── First-Time Admin Setup ───────────────────────────────────────────────────
+# This endpoint allows creating the very first admin account.
+# SECURITY: It is disabled permanently once an admin password hash exists.
+# After setup, this endpoint becomes a no-op — no second admin can be created via sign-up.
+class SetupRequest(BaseModel):
+    name: str
+    email: str
+    password: str
+
+@app.post("/api/setup")
+async def setup_admin(req: SetupRequest, request: Request):
+    global TEAM
+    client_ip = request.headers.get("X-Forwarded-For", request.client.host if request.client else "unknown")
+
+    # Rate limit to prevent brute-force
+    if not check_login_rate_limit(client_ip):
+        raise HTTPException(status_code=429, detail="Too many requests. Please wait 60 seconds.")
+
+    # SECURITY: Check if user already exists in the local database
+    if any(m.get("email") == req.email for m in TEAM):
+        raise HTTPException(status_code=403, detail="An account with this email already exists. Sign in instead.")
+
+    # SECURITY: Check if user already exists in Supabase
+    if supabase:
+        try:
+            res = supabase.table('team_members').select('email').eq('email', req.email).execute()
+            if res.data:
+                raise HTTPException(status_code=403, detail="An account with this email already exists. Sign in instead.")
+        except HTTPException:
+            raise
+        except Exception:
+            pass
+            
+    import subprocess
+    import os
+    
+    # As requested by the user: "clear all the section if there the new account is created"
+    # We will wipe the DB before creating this new account.
+    try:
+        subprocess.run(["python", "wipe_db.py"], check=True)
+    except Exception as e:
+        print("Failed to wipe DB:", e)
+        
+    # Reload local TEAM list to be empty
+    TEAM = []
+
+    # Validate inputs
+    if not req.name or not req.email or not req.password:
+        raise HTTPException(status_code=400, detail="Name, email, and password are required.")
+    if len(req.password) < 6:
+        raise HTTPException(status_code=400, detail="Password must be at least 6 characters.")
+
+    # Hash the password securely
+    hashed_pw = hash_password(req.password)
+
+    payload = {
+        "name": sanitize_str(req.name, 100),
+        "role": "admin",
+        "position": "admin",
+        "avatar_bg": "#10b981",  # Green default for admin
+        "capacity": 100,
+        "tasks": 0,
+        "status": "healthy",
+        "active": True,
+        "email": req.email,
+        "password": hashed_pw
+    }
+
+    # Save admin to Supabase
+    if supabase:
+        try:
+            supabase.table('team_members').insert(payload).execute()
+        except Exception:
+            pass
+
+    # Save admin to the local db_team.json so it works persistently
+    local_payload = payload
+    TEAM.append(local_payload)
+    save_team(TEAM)
+
+    # Log the new admin in immediately with a session token
+    token = create_session(req.email, "admin", req.name)
+    return {"name": req.name, "email": req.email, "role": "admin", "token": token}
+
+# ─── Public Self-Registration ─────────────────────────────────────────────────
+# This endpoint is intentionally PUBLIC (no auth required) so that new users
+# can create their own account from the sign-up page.
+# It differs from POST /api/team (which is admin-only) in that it:
+#   - Forces role = 'Team Member' and position = 'member' (no privilege escalation)
+#   - Does NOT allow setting arbitrary avatar_bg colors beyond a safe default
+@app.post("/api/register")
+async def register_user(member: TeamMemberCreate, request: Request):
+    client_ip = request.headers.get("X-Forwarded-For", request.client.host if request.client else "unknown")
+
+    # Reuse the login rate limiter to also protect registration from spam
+    if not check_login_rate_limit(client_ip):
+        raise HTTPException(status_code=429, detail="Too many requests. Please wait 60 seconds.")
+
+    # Validate required fields
+    if not member.name or not member.email or not member.password:
+        raise HTTPException(status_code=400, detail="Name, email, and password are required.")
+    if len(member.password) < 6:
+        raise HTTPException(status_code=400, detail="Password must be at least 6 characters.")
+
+    # Check if email already exists in the local fallback list
+    if any(m.get('email') == member.email for m in TEAM):
+        raise HTTPException(status_code=409, detail="An account with this email already exists.")
+
+    # Check if email already exists in Supabase
+    if supabase:
+        try:
+            res = supabase.table('team_members').select('email').eq('email', member.email).execute()
+            if res.data:
+                raise HTTPException(status_code=409, detail="An account with this email already exists.")
+        except HTTPException:
+            raise  # re-raise the 409 we just threw
+        except Exception:
+            pass  # DB check failed, continue anyway
+
+    # SECURITY: Force role and position — never trust user-supplied values for these
+    safe_role = "Team Member"
+    safe_position = "member"
+
+    # Hash the password before storing — never store plaintext
+    hashed_pw = hash_password(member.password)
+
+    payload = {
+        "name": sanitize_str(member.name, 100),
+        "role": safe_role,
+        "avatar_bg": "#6366f1",  # Fixed default; don't let users choose arbitrary colors
+        "capacity": 0,
+        "tasks": 0,
+        "status": "healthy",
+        "active": True,
+        "email": member.email
+    }
+
+    if supabase:
+        try:
+            supabase.table('team_members').insert(payload).execute()
+        except Exception as e:
+            # If DB insert fails, still create local account as fallback
+            pass
+
+    # Always store locally so the user can log in immediately
+    local_payload = {**payload, "password": hashed_pw, "position": safe_position}
+    TEAM.append(local_payload)
+    save_team(TEAM)
+
+    # Immediately log the new user in and return a session token
+    token = create_session(member.email, safe_position, member.name)
+    return {"name": member.name, "email": member.email, "role": safe_position, "token": token}
 
 @app.post("/api/team")
 async def add_team_member(member: TeamMemberCreate, session: dict = Depends(require_admin)):

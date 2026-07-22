@@ -437,21 +437,54 @@ async function renderPortfolioChart() {
     let projects = [];
     try { projects = await api('/projects'); } catch {}
 
-    const labels = projects.length ? projects.map(p => p.name.split(' ')[0]) : ['Omega','Atlas','Mercury','Nova'];
-    const data   = projects.length ? projects.map(p => p.progress || 0) : [62,81,40,95];
-    const colors = ['#6366f1','#10b981','#f59e0b','#06b6d4','#f43f5e','#8b5cf6','#ec4899','#14b8a6'];
+    let labels = [];
+    let data = [];
+    let colors = ['#6366f1','#10b981','#f59e0b','#06b6d4','#f43f5e','#8b5cf6','#ec4899','#14b8a6'];
+
+    if (projects.length) {
+        labels = projects.map(p => p.name.split(' ')[0]);
+        data = projects.map(p => p.progress || 0);
+    } else {
+        // Show empty state if no projects
+        labels = ['No Projects'];
+        data = [100];
+        colors = ['#334155']; // slate gray for empty
+    }
 
     portfolioChart = new Chart(ctx, {
         type: 'doughnut',
         data: { labels, datasets: [{ data, backgroundColor: colors.slice(0, labels.length), borderWidth:0, hoverOffset:6 }] },
-        options: { responsive:true, maintainAspectRatio:false, cutout:'72%', plugins:{ legend:{display:false} } }
+        options: { 
+            responsive:true, 
+            maintainAspectRatio:false, 
+            cutout:'72%', 
+            plugins:{ 
+                legend:{display:false},
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            if (!projects.length) return ' No active projects';
+                            return ' ' + context.label + ': ' + context.raw + '%';
+                        }
+                    }
+                }
+            } 
+        }
     });
-    document.getElementById('donut-legend').innerHTML = labels.map((l, i) => `
-        <div class="legend-item">
-            <div class="legend-dot" style="background:${colors[i]}"></div>
-            <span class="legend-label">${l}</span>
-            <span class="legend-val">${data[i]}%</span>
-        </div>`).join('');
+    
+    if (projects.length) {
+        document.getElementById('donut-legend').innerHTML = labels.map((l, i) => `
+            <div class="legend-item">
+                <div class="legend-dot" style="background:${colors[i]}"></div>
+                <span class="legend-label">${l}</span>
+                <span class="legend-val">${data[i]}%</span>
+            </div>`).join('');
+    } else {
+        document.getElementById('donut-legend').innerHTML = `
+            <div class="legend-item" style="justify-content: center; opacity: 0.5; margin-top: 20px;">
+                <span class="legend-label">Create a project to see portfolio insights.</span>
+            </div>`;
+    }
 }
 
 function renderWorkloadChart(team) {
@@ -2500,22 +2533,25 @@ async function fetchMemberDashboard() {
                 if (matchedUser.token) setToken(matchedUser.token);
                 matchedUser.position = matchedUser.role; // map role to position for UI compatibility
             } else {
-                // Backend Sign Up
-                const res = await authFetch(`${API}/team`, {
-                    method: 'POST', headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({
-                        name: nameVal, email, password, role: 'Team Member', position: 'member', avatar_bg: '#6366f1'
-                    })
+                // Sign Up — calls /api/setup which creates the first-time admin account.
+                // If an admin already exists, the server returns 403 and tells the user to sign in instead.
+                const res = await fetch(`${API}/setup`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ name: nameVal, email, password })
                 });
                 if (!res.ok) {
-                    showLoginError('Failed to create account or email already exists.');
+                    const errData = await res.json().catch(() => ({}));
+                    // Show the specific error (e.g., "Admin account already exists. Sign in instead.")
+                    showLoginError(errData.detail || 'Failed to create account. Please try again.');
                     btn.innerHTML = '<i class="ri-user-add-line"></i> Create Account';
                     btn.disabled = false;
                     return;
                 }
-                matchedUser = { name: nameVal, email, position: 'member' };
-                // Do NOT store password in localStorage — it's insecure
-                // Account creation is handled server-side
+                // Setup returns token + user info like login — log the admin in immediately
+                matchedUser = await res.json();
+                if (matchedUser.token) setToken(matchedUser.token);
+                matchedUser.position = matchedUser.role; // map role → position for UI compatibility
             }
         } catch (e) {
             showLoginError('Network error connecting to backend.');
